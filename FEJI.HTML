@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style type="text/css">
+			*{
+				margin: 0px;
+			}
+			#container{
+				height: 800px;
+				width: 600px;
+				background: url(img/bg.jpg);
+				margin:100px auto;
+				position:relative;
+			}
+			.plane{
+				width: 40px;
+				height: 60px;
+				background-color: red;
+				background:url(img/plane.png) center / 100% 100%;
+				position: absolute;
+				left: calc(50% - 40px);
+				bottom: 10px;
+			}
+			.bullet{
+				height: 20px;
+				width: 80px;
+				background:gold;
+				position: absolute;
+				border-radius: 50% 50% 0 0;
+			}
+			.hater{
+				height: 30px;
+				width: 50px;
+				background: red;
+				position: absolute;
+			}
+			#socre{
+				height: 300px;
+				width: 250px;
+				border-radius: 10px;
+				background: sandybrown;
+				position: absolute;
+				left: -280px;
+			}
+			.text{
+				height: 180px;
+				width: 180px;
+				background: cornsilk;
+				color: #000000;
+				font-size: 30px;
+				line-height: 180px;
+				margin: 60px auto;
+				text-align: center;
+				font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container">
+			<div class="plane"></div>
+			<div id="socre" style="left: -280px; width: 448px;">
+				
+				<div class="text"><span>得分：</span><span>0</span></div>
+			</div>
+			
+		</div>
+		<h1>难度: <span class="lv">1</span></h1>
+		
+	</body>
+	<script src="http://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+	<script type="text/javascript">
+	
+	  	var sleep = 15;
+	  	var enTime = new Date();
+	  	var bullet_interval = 300;//子弹间隔
+	  	var hater_creater_interval = 1000 // 产生敌机的间隔
+	  	var hater_sleep_interval = 20  //敌机下落的速度
+	  	var game_isplaying = false //判断游戏是否结束
+	  	//子弹飞行速度
+	  	var bullet_fly_sleep = 25;
+	  	var score = 0;
+	  	var lv = 1;
+	  	
+		function calcPosition(left,top,maxLeft,maxTop){//判断飞机坐标是否越界
+			var minLeft=0;
+			var minTop=0;
+			if(left>maxLeft){
+				left = maxLeft;
+			}
+			else if(left<minLeft){
+				left = minLefe;
+			}
+			if(top>maxTop){
+				top = maxTop;
+			}
+			else if(top<minTop){
+				top = minTop;
+			}
+			var s = [left,top];
+			return s;
+		}
+		
+		
+		function shoot(){//生成子弹
+			if((new Date() - enTime)<bullet_interval)
+			return false;
+			
+			//获取飞机的位置 在飞机的位置生成子弹
+			var top = $(".plane").position().top - 25;
+			var bullet = $("<div/>").addClass("bullet").css("top",top);
+			$("#container").append(bullet);
+			var left = $(".plane").position().left + $(".plane").innerWidth()/2 - (bullet.innerWidth()/2);
+			bullet.css("left",left);
+			
+			
+			enTime = new Date();
+			
+			
+		}
+	
+		$(window).keydown(function(e){//控制飞机方向和发射子弹
+			if(!game_isplaying){
+				var t = $(".plane").position().top;
+			var l = $(".plane").position().left;
+			switch(e.keyCode){
+				case 38:
+					//按上使得飞机向上移动 即定位的top位置向顶部靠拢
+					t -= sleep;
+					break;//上
+				case 40:
+					//向下同上
+					t += sleep;
+					break;//下
+				case 37:
+					l -= sleep;
+					break//左
+				case 39:
+					l += sleep;
+					break;//右
+				case 32:
+					shoot();
+					break;
+				case 13:
+					break;
+			}
+			var maxLeft = $("#container").width() - $(".plane").width();
+			var maxTop = $("#container").height() - $(".plane").height();
+			var positions = calcPosition(l,t,maxLeft,maxTop);
+			$(".plane").css("top",positions[1]).css("left",positions[0]);
+			}
+		});
+		
+		
+		//获取对象的上下左右位置
+		function getDomTRBL(dom){
+			var st = {};
+			st.left = dom.offsetLeft;
+			st.right = dom.offsetLeft+dom.offsetWidth;
+			st.top = dom.offsetTop;
+			st.bottom = dom.offsetTop+dom.offsetHeight;
+			return st;
+		}
+		//判断碰撞方法
+		function checkCollision(a,b){
+			a = getDomTRBL(a);
+			b = getDomTRBL(b);
+			if(a.left >= b.left && a.left<=b.right && a.top>=b.top && a.top <= b.bottom){
+				return true
+			}else if(a.left >= b.left && a.left<=b.right && a.bottom>=b.top && a.bottom <= b.bottom){
+				return true
+			}else if(a.right >= b.left && a.right<=b.right && a.top>=b.top && a.top <= b.bottom){
+				return true
+			}else if(a.right >= b.left && a.right<=b.right && a.bottom>=b.top && a.bottom <= b.bottom){
+				return true
+			}
+			return false
+		}
+		
+		//方法
+		//子弹飞行
+		function bullet_fly(){
+				$(".bullet").each(function(){
+					var bullet = $(this);
+					bullet.css("top",bullet.position().top - 5);
+					if(bullet.position().top < 0){
+						bullet.remove();
+					}
+				})
+		}
+		
+		function hater_fly(){
+				$(".hater").each(function(){
+					var hater = $(this);
+					hater.css("top",hater.position().top + 1);
+					if(hater.position().top > $("#container").innerHeight()-$(this).innerHeight()){
+						hater.remove();
+					}
+				})
+		}
+		//生成敌机
+		function creat_hater(){
+			var hater = $("<div/>").addClass("hater").css("top",0);
+			$("#container").append(hater);
+			var left = Math.round(Math.random()*($("#container").innerWidth() - $(".hater").innerWidth()));
+			hater.css("left",left);
+			
+			
+		}
+		function check_myandhater(){
+			//判断敌机和我的碰撞
+			var plane = $(".plane").get(0);
+			$(".hater").each(function(i,item){
+				if(checkCollision(plane,item)||checkCollision(item,plane)){
+					console.log("撞了")
+					stop_game();
+					game_isplaying = true
+				}
+			});
+		}
+		//判断子弹击中敌机 加分与增加难度
+		function check_bulletandhater(){
+			$(".hater").each(function(i,hater){
+				$(".bullet").each(function(i,bullet){
+					console.log("bullet")
+					if(checkCollision(hater,bullet)||checkCollision(bullet , hater)){
+						bullet.remove()
+						hater.remove()
+						score += 10;
+						$(".text").children("span").last().text(score);
+						
+						if(score%200==0){
+							lv++;
+							$(".lv").text(lv);
+							
+							clearInterval(hater_intime);
+							hater_sleep_interval -= lv;
+							hater_intime = setInterval(hater_fly,hater_sleep_interval);
+						}
+					}
+				});
+			});
+		}
+		//子弹飞行
+			var bullet_timer = setInterval(bullet_fly,bullet_fly_sleep);
+		//敌机飞行
+			var hater_intime = setInterval(hater_fly,hater_sleep_interval);
+		//生成敌机
+		var create_Hater_time = setInterval(creat_hater,hater_creater_interval);
+		// 判断是否碰撞
+		var checkGameOut = setInterval(check_myandhater,500);
+		//判断子弹是否打中敌机
+		var checkppp = setInterval(check_bulletandhater,50);
+		
+		//开启
+		function start_game(){
+			bullet_timer = setInterval(bullet_fly,bullet_fly_sleep);
+			hater_intime = setInterval(hater_fly,hater_sleep_interval);
+			create_Hater_time = setInterval(creat_hater,hater_creater_interval);
+			checkGameOut = setInterval(check_myandhater,50);
+			checkppp = setInterval(check_bulletandhater,50);
+		}
+		
+		//关闭所有定时器
+		function stop_game(){
+			clearInterval(create_Hater_time);
+			clearInterval(hater_intime);
+			clearInterval(bullet_timer);
+			clearInterval(checkGameOut);
+			clearInterval(checkppp);
+		}
+	</script>
+</html>
+
+
+
+
